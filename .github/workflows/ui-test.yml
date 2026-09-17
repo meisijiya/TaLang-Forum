@@ -41,7 +41,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
+          # #18 v3 fix: cache: pip removed — requires **/requirements.txt or **/pyproject.toml in repo
 
       - name: Install Python dependencies
         # #18 v3 fix: no working-directory (ui-test/ may not exist)

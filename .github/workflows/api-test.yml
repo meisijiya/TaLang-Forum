@@ -44,9 +44,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: pip
-          # #18 v3 fix: cache-dependency-path removed (api_test/requirements.txt not in repo)
-          # Without this, setup-python would fail: "No file matched to [api_test/requirements.txt]"
+          # #18 v3 fix: cache: pip removed — requires **/requirements.txt or **/pyproject.toml in repo
+          # Fork has no test deps files committed, so pip cache always fails with:
+          # "No file matched to [**/requirements.txt or **/pyproject.toml]"
 
       - name: Install Python dependencies
         # #18 v3 fix: no working-directory (api_test/ may not exist if testcases not yet committed)
