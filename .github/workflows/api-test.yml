@@ -220,14 +220,18 @@ jobs:
           fi
 
       - name: Generate fresh admin + signout tokens via MySQL
+        # #53 fix: capture token to GITHUB_ENV so pytest step picks it up via BBS_GO_ADMIN_TOKEN
+        # (之前只 INSERT 进 MySQL 但没暴露给 pytest → 77 个 user/comment 用例 skip)
         run: |
           MYSQL_CONTAINER=$(docker compose ps -q mysql)
+          TOKEN=$(python -c 'import secrets; print(secrets.token_hex(16))')
           docker exec "${MYSQL_CONTAINER}" mysql -ubbsgo -pbbsgo_password bbsgo -e "
             INSERT INTO t_user_token (token, user_id, expired_at, status, create_time)
-            VALUES ('$(python -c 'import secrets; print(secrets.token_hex(16))')', 1,
-                    UNIX_TIMESTAMP()*1000 + 7*24*3600*1000, 0, UNIX_TIMESTAMP()*1000);
+            VALUES ('${TOKEN}', 1, UNIX_TIMESTAMP()*1000 + 7*24*3600*1000, 0, UNIX_TIMESTAMP()*1000);
             SELECT token, user_id, status FROM t_user_token WHERE user_id=1 AND status=0 ORDER BY id DESC LIMIT 5;
           " 2>&1 | tail -10
+          echo "BBS_GO_ADMIN_TOKEN=${TOKEN}" >> "$GITHUB_ENV"
+          echo "Captured admin token for pytest"
 
       - name: Run pytest (api tests)
         # #18b fix: cd api_test 让 conftest.py 自动加载 base_api/common
