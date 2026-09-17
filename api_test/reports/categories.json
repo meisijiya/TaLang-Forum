@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Product Bug",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*(500 Internal Server Error|panic|nil pointer|sql:|stack overflow).*"
+  },
+  {
+    "name": "Test Bug",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*(AssertionError|expected.*but was|KeyError|NameError).*"
+  },
+  {
+    "name": "Captcha Blocked",
+    "matchedStatuses": ["skipped", "passed", "failed"],
+    "messageRegex": ".*(验证码|captcha).*"
+  },
+  {
+    "name": "Environment Issue",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*(Connection refused|timeout|ECONNREFUSED).*"
+  },
+  {
+    "name": "xfail Expected",
+    "matchedStatuses": ["xfailed", "xpassed"],
+    "messageRegex": ".*"
+  }
+]

@@ -1,0 +1,75 @@
+# 权限/角色模块测试数据（6 用例）
+cases:
+  - id: perm-01-user-current
+    name: 当前用户权限（带 token）
+    priority: P0
+    needs_token: true
+    request:
+      method: GET
+      path: /api/user/current
+    expect:
+      status: 200
+      success: true
+
+  - id: perm-02-create-topic-no-token
+    name: 未登录发帖
+    priority: P1
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[perm-test] no auth"
+        content: "x"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: perm-03-edit-other-user-topic
+    name: 编辑他人帖子（应失败）
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/edit/9999999
+      json:
+        title: "hack"
+        content: "hack"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: perm-04-delete-other-user-topic
+    name: 删除他人帖子（应失败）
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/delete/9999999
+    expect:
+      status: 200
+      success: false
+
+  - id: perm-05-admin-categories
+    name: 管理员接口 - 板块列表（带 admin token）
+    priority: P2
+    needs_token: true
+    request:
+      method: GET
+      path: /api/admin/category/list
+    expect:
+      status: 200
+      success: true
+
+  - id: perm-06-admin-categories-no-token
+    name: 管理员接口无 token
+    priority: P1
+    request:
+      method: GET
+      path: /api/admin/category/list
+    expect:
+      status: 200
+      success: false

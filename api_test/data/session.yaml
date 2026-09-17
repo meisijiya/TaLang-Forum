@@ -1,0 +1,60 @@
+# session 模块测试数据（5 用例 - partial login scenarios）
+# 注：bbs-go 用 cookie + token 双轨；session 测试 token 注入与失败场景
+cases:
+  - id: session-01-current-with-valid-token
+    name: 有效 token 获取 session
+    priority: P0
+    needs_token: true
+    request:
+      method: GET
+      path: /api/user/current
+    expect:
+      status: 200
+      success: true
+      data_has_fields: [id, username, nickname]
+
+  - id: session-02-current-with-invalid-token
+    name: 无效 token 获取 session
+    priority: P1
+    request:
+      method: GET
+      path: /api/user/current
+      headers:
+        Authorization: invalid_token_xyz_12345
+    expect:
+      status: 200
+      success: false
+
+  - id: session-03-token-expired
+    name: 过期 token 获取 session
+    priority: P1
+    request:
+      method: GET
+      path: /api/user/current
+      headers:
+        Authorization: "EXPIRED_TOKEN_1234567890"
+    expect:
+      status: 200
+      success: false
+
+  - id: session-04-no-auth-header
+    name: 无 Authorization header 获取 session
+    priority: P1
+    request:
+      method: GET
+      path: /api/user/current
+    expect:
+      status: 200
+      success: false
+
+  - id: session-05-malformed-bearer
+    name: 格式错误 Bearer token
+    priority: P2
+    request:
+      method: GET
+      path: /api/user/current
+      headers:
+        Authorization: "Bearer not_a_real_token_format"
+    expect:
+      status: 200
+      success: false

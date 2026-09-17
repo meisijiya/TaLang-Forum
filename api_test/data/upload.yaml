@@ -1,0 +1,48 @@
+# 上传模块测试数据（4 用例）
+# 注：upload 需要 multipart/form-data，本测试仅验证 endpoint 可达 + 错误处理
+cases:
+  - id: upload-01-no-file
+    name: 上传无文件
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/upload
+      json: {}
+    expect:
+      status: 200
+      success: false
+
+  - id: upload-02-no-token
+    name: 上传未登录
+    priority: P1
+    request:
+      method: POST
+      path: /api/upload
+      json:
+        image: "dummy"
+    expect:
+      status: 200
+      success: false
+
+  - id: upload-03-invalid-method
+    name: 上传 GET 方法
+    priority: P2
+    request:
+      method: GET
+      path: /api/upload
+    expect:
+      status: 404
+
+  - id: upload-04-no-file-multipart
+    name: multipart 上传空表单
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/upload
+      files:
+        - ("file", ("empty.txt", b"", "text/plain"))
+    expect:
+      status: 200
+      success: false

@@ -1,0 +1,136 @@
+# 用户模块测试数据（12 用例）
+cases:
+  - id: user-01-current
+    name: 获取当前用户信息
+    priority: P0
+    request:
+      method: GET
+      path: /api/user/current
+      needs_token: true
+    expect:
+      status: 200
+      success: true
+      data_has_fields: [id, nickname, username]
+
+  - id: user-02-current-no-token
+    name: 无 token 获取当前用户
+    priority: P1
+    request:
+      method: GET
+      path: /api/user/current
+    expect:
+      status: 200
+      success: false
+
+  - id: user-03-detail-admin
+    name: 查看 admin 详情
+    priority: P0
+    request:
+      method: GET
+      path: /api/user/8EqSDhrQDK4
+    expect:
+      status: 200
+      success: true
+
+  - id: user-04-detail-not-found
+    name: 不存在的用户 ID
+    priority: P2
+    request:
+      method: GET
+      path: /api/user/nonexistent_id_999999
+    expect:
+      status: 200
+      success: false
+
+  - id: user-05-score-rank
+    name: 积分排行榜
+    priority: P0
+    request:
+      method: GET
+      path: /api/user/score/rank
+    expect:
+      status: 200
+      success: true
+
+  - id: user-06-score-logs
+    name: 积分日志
+    priority: P0
+    request:
+      method: GET
+      path: /api/user/score_logs
+      needs_token: true
+    expect:
+      status: 200
+      success: true
+
+  - id: user-07-update-nickname
+    name: 更新昵称
+    priority: P0
+    request:
+      method: POST
+      path: /api/user/update/8EqSDhrQDK4
+      needs_token: true
+      json:
+        nickname: admin_test_nickname
+    expect:
+      status: 200
+      success: true
+
+  - id: user-08-update-no-token
+    name: 无 token 更新用户
+    priority: P1
+    request:
+      method: POST
+      path: /api/user/update/8EqSDhrQDK4
+      json:
+        nickname: hack_nickname
+    expect:
+      status: 200
+      success: false
+
+  - id: user-09-update-password-short
+    name: 更新密码太短
+    priority: P1
+    request:
+      method: POST
+      path: /api/user/update_password
+      needs_token: true
+      json:
+        oldPassword: Test@12345
+        newPassword: 123
+    expect:
+      status: 200
+      success: false
+
+  - id: user-10-messages
+    name: 获取站内消息
+    priority: P2
+    request:
+      method: GET
+      path: /api/user/messages
+      needs_token: true
+    expect:
+      status: 200
+      success: true
+
+  - id: user-11-favorites
+    name: 获取收藏列表
+    priority: P2
+    request:
+      method: GET
+      path: /api/user/favorites
+      needs_token: true
+    expect:
+      status: 200
+      success: true
+
+  - id: user-12-msg-recent
+    name: 获取最近消息
+    priority: P2
+    request:
+      method: GET
+      path: /api/user/msg_recent
+      needs_token: true
+    expect:
+      status: 200
+      success: true

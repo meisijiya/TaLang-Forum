@@ -1,0 +1,124 @@
+# 板块模块测试数据（10 用例）
+cases:
+  - id: section-01-list
+    name: 获取板块分类列表
+    priority: P0
+    request:
+      method: GET
+      path: /api/topic/categories
+    expect:
+      status: 200
+      success: true
+      data_is_list: true
+
+  - id: section-02-navs
+    name: 获取板块导航
+    priority: P0
+    request:
+      method: GET
+      path: /api/topic/category_navs
+    expect:
+      status: 200
+      success: true
+
+  - id: section-03-detail
+    name: 获取板块详情
+    priority: P0
+    request:
+      method: GET
+      path: /api/topic/category
+      params:
+        categoryId: 1
+    expect:
+      status: 200
+      success: true
+
+  - id: section-04-detail-not-exist
+    name: 获取不存在板块
+    priority: P1
+    request:
+      method: GET
+      path: /api/topic/category
+      params:
+        categoryId: 99999
+    expect:
+      status: 200
+      success: false
+
+  - id: section-05-topics
+    name: 板块下帖子列表
+    priority: P0
+    request:
+      method: GET
+      path: /api/topic/topics
+      params:
+        categoryId: 1
+    expect:
+      status: 200
+      success: true
+
+  - id: section-06-topics-empty-category
+    name: 板块 ID 不存在
+    priority: P1
+    request:
+      method: GET
+      path: /api/topic/topics
+      params:
+        categoryId: 99999
+    expect:
+      status: 200
+      success: true
+      data_has_field: results
+
+  - id: section-07-recommend
+    name: 推荐帖子列表
+    priority: P2
+    request:
+      method: GET
+      path: /api/topic/recommend
+    expect:
+      status: 200
+      success: true
+
+  - id: section-08-user-topics
+    name: 用户帖子列表
+    priority: P1
+    request:
+      method: GET
+      path: /api/topic/user_topics
+      params:
+        userId: 8EqSDhrQDK4
+    expect:
+      status: 200
+      success: true
+
+  - id: section-09-create-topic
+    name: 在板块发帖子
+    priority: P0
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] section test"
+        content: "[apitest] content"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: true
+
+  - id: section-10-create-topic-no-token
+    name: 未登录发帖
+    priority: P1
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] no auth"
+        content: "x"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false

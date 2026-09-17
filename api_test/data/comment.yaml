@@ -1,0 +1,159 @@
+# 评论模块测试数据（12 用例）
+cases:
+  - id: comment-01-create
+    name: 创建评论
+    priority: P0
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: "topic"
+        entityId: "1"
+        content: "[apitest] comment-01"
+    expect:
+      status: 200
+      success: true
+
+  - id: comment-02-create-empty
+    name: 空内容评论
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: "topic"
+        entityId: "1"
+        content: ""
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-03-create-no-entity
+    name: 无 entityType 评论
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: ""
+        entityId: "1"
+        content: "x"
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-04-create-invalid-entity
+    name: 不存在 entityId 评论
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: "topic"
+        entityId: "99999999"
+        content: "x"
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-05-create-xss
+    name: 带 XSS 内容评论
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: "topic"
+        entityId: "1"
+        content: "<script>alert('xss')</script>"
+    expect:
+      status: 200
+      success: true
+
+  - id: comment-06-create-no-token
+    name: 未登录评论
+    priority: P1
+    request:
+      method: POST
+      path: /api/comment/create
+      json:
+        entityType: "topic"
+        entityId: "1"
+        content: "x"
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-07-list
+    name: 评论列表
+    priority: P0
+    request:
+      method: GET
+      path: /api/comment/comments
+      params:
+        entityType: "topic"
+        entityId: "1"
+    expect:
+      status: 200
+      success: true
+
+  - id: comment-08-list-no-entity
+    name: 评论列表无 entityType
+    priority: P1
+    request:
+      method: GET
+      path: /api/comment/comments
+      params:
+        entityId: "1"
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-09-replies
+    name: 评论回复列表
+    priority: P2
+    request:
+      method: GET
+      path: /api/comment/replies
+      params:
+        commentId: "1"
+    expect:
+      status: 200
+      success: true
+
+  - id: comment-10-delete
+    name: 删除自己的评论
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/delete/1
+    expect:
+      status: 200
+      success: true
+
+  - id: comment-11-delete-no-token
+    name: 无 token 删除评论
+    priority: P1
+    request:
+      method: POST
+      path: /api/comment/delete/1
+    expect:
+      status: 200
+      success: false
+
+  - id: comment-12-delete-not-exist
+    name: 删除不存在评论
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/comment/delete/9999999
+    expect:
+      status: 200
+      success: false

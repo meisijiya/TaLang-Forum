@@ -1,0 +1,280 @@
+# 帖子模块测试数据（20 用例）
+cases:
+  - id: post-01-create-basic
+    name: 创建普通帖子
+    priority: P0
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] post-01 basic"
+        content: "test content"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: true
+
+  - id: post-02-create-empty-title
+    name: 创建帖子空标题
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: ""
+        content: "x"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-03-create-empty-content
+    name: 创建帖子空内容
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] no content"
+        content: ""
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-04-create-no-category
+    name: 创建帖子无板块
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] no category"
+        content: "x"
+        categoryId: 0
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-05-create-invalid-category
+    name: 创建帖子无效板块
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] invalid cat"
+        content: "x"
+        categoryId: 99999
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-06-create-tweet-type
+    name: 创建 tweet 类型
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] tweet"
+        content: "tweet content"
+        categoryId: 1
+        type: 1
+    expect:
+      status: 200
+      success: true
+
+  - id: post-07-create-qa-type
+    name: 创建问答类型
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] qa"
+        content: "qa content"
+        categoryId: 1
+        type: 2
+    expect:
+      status: 200
+      success: true
+
+  - id: post-08-create-long-title
+    name: 创建超长标题
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        content: "x"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-09-create-xss-content
+    name: 创建带 XSS 内容
+    priority: P2
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/create
+      json:
+        title: "[apitest] xss test"
+        content: "<script>alert('xss')</script>"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: true
+
+  - id: post-10-list
+    name: 帖子列表
+    priority: P0
+    request:
+      method: GET
+      path: /api/topic/topics
+    expect:
+      status: 200
+      success: true
+      data_has_field: results
+
+  - id: post-11-list-pagination
+    name: 帖子列表分页
+    priority: P1
+    request:
+      method: GET
+      path: /api/topic/topics
+      params:
+        page: 1
+        pageSize: 10
+    expect:
+      status: 200
+      success: true
+
+  - id: post-12-detail
+    name: 帖子详情
+    priority: P0
+    needs_token: true
+    request:
+      method: GET
+      path: /api/topic/detail/1
+    expect:
+      status: 200
+      success: true
+
+  - id: post-13-detail-not-exist
+    name: 帖子不存在
+    priority: P1
+    request:
+      method: GET
+      path: /api/topic/detail/9999999
+    expect:
+      status: 200
+      success: false
+
+  - id: post-14-edit
+    name: 编辑自己的帖子
+    priority: P0
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/edit/1
+      json:
+        title: "[apitest] edited title"
+        content: "edited content"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: true
+
+  - id: post-15-edit-no-token
+    name: 无 token 编辑帖子
+    priority: P1
+    request:
+      method: POST
+      path: /api/topic/edit/1
+      json:
+        title: "hacked"
+        content: "hacked"
+        categoryId: 1
+        type: 0
+    expect:
+      status: 200
+      success: false
+
+  - id: post-16-delete
+    name: 删除自己的帖子
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/topic/delete/1
+    expect:
+      status: 200
+      success: true
+
+  - id: post-17-delete-no-token
+    name: 无 token 删除帖子
+    priority: P1
+    request:
+      method: POST
+      path: /api/topic/delete/1
+    expect:
+      status: 200
+      success: false
+
+  - id: post-18-recent-likes
+    name: 最近点赞
+    priority: P2
+    request:
+      method: GET
+      path: /api/topic/recentlikes/8EqSDhrQDK4
+    expect:
+      status: 200
+      success: true
+
+  - id: post-19-like-toggle
+    name: 点赞 / 取消点赞
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/like/like
+      json:
+        entityType: "topic"
+        entityId: "1"
+    expect:
+      status: 200
+      success: true
+
+  - id: post-20-favorite-toggle
+    name: 收藏 / 取消收藏
+    priority: P1
+    needs_token: true
+    request:
+      method: POST
+      path: /api/favorite/add
+      json:
+        entityType: "topic"
+        entityId: "1"
+    expect:
+      status: 200
+      success: true
