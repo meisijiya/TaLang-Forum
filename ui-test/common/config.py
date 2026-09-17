@@ -1,0 +1,8 @@
+"""UI 测试共享配置"""
+import os
+
+BBS_GO_BASE_URL = os.getenv("BBS_GO_BASE_URL", "http://127.0.0.1:8081")
+BBS_GO_ADMIN_USERNAME = os.getenv("BBS_GO_ADMIN_USERNAME", "admin")
+BBS_GO_ADMIN_PASSWORD = os.getenv("BBS_GO_ADMIN_PASSWORD", "Test@12345")
+BBS_GO_ADMIN_TOKEN = os.getenv("BBS_GO_ADMIN_TOKEN", "")
+BBS_GO_ADMIN_OBFUSCATED_ID = "8EqSDhrQDK4"

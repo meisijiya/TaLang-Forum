@@ -1,0 +1,8 @@
+cases:
+  - id: ui-login-01
+    name: admin cookie 注入登录
+    cookie_required: true
+    expected_url_not_contains: signin
+  - id: ui-login-02
+    name: 错误密码登录
+    expected_url_contains: signin

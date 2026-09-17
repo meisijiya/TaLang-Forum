@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<environment>
+    <parameter>
+        <key>BBS_GO_BASE_URL</key>
+        <value>http://127.0.0.1:8081</value>
+    </parameter>
+    <parameter>
+        <key>Python</key>
+        <value>3.11</value>
+    </parameter>
+    <parameter>
+        <key>pytest</key>
+        <value>8.3.3</value>
+    </parameter>
+    <parameter>
+        <key>playwright</key>
+        <value>1.60.0</value>
+    </parameter>
+    <parameter>
+        <key>allure-pytest</key>
+        <value>2.13.5</value>
+    </parameter>
+    <parameter>
+        <key>Test Module</key>
+        <value>bbs-go UI 12 scenarios / 6 modules</value>
+    </parameter>
+</environment>

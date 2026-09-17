@@ -1,0 +1,7 @@
+cases:
+  - id: ui-comment-01
+    name: 创建评论（form + API fallback）
+    content: "[ui-test] main comment"
+  - id: ui-comment-02
+    name: 评论回复（API 创建）
+    content: "[ui-test] reply"

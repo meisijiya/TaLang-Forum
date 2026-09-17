@@ -1,0 +1,9 @@
+cases:
+  - id: ui-section-01
+    name: 板块列表页
+    path: /categories
+    expected_text: ""
+  - id: ui-section-02
+    name: 默认板块详情
+    path: /category/1
+    expected_text: "默认节点"

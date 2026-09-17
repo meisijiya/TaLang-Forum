@@ -1,0 +1,13 @@
+cases:
+  - id: ui-topic-01
+    name: 创建帖子（form + API fallback）
+    title: "[ui-test] auto topic"
+    content: "ui test content"
+    category_id: 1
+    type: 0
+  - id: ui-topic-02
+    name: 编辑帖子（API 创建后 form 验证）
+    title: "[ui-test] edit topic"
+    content: "edit test content"
+    category_id: 1
+    type: 0

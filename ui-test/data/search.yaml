@@ -1,0 +1,7 @@
+cases:
+  - id: ui-search-01
+    name: 关键词搜索
+    keyword: apitest
+  - id: ui-search-02
+    name: 空状态搜索
+    keyword: zzz_nonexistent_keyword_xyz_99999
