@@ -38,7 +38,7 @@ services:
       - ./docker-data/logs:/app/logs
       - ./docker-data/uploads:/app/res/uploads
     ports:
-      - "3000:3000"
+      - "8081:3000"
     environment:
       BBSGO_ENV: prod
       NODE_ENV: production
