@@ -1,0 +1,53 @@
+# #18 v3: .dockerignore for Dockerfile.ci builds
+# Exclude large dirs not needed in build context
+
+# VCS
+.git/
+.gitignore
+.gitattributes
+
+# Scaffolding / dev artifacts (NOT including ci-assets/ — needed for build)
+.scratch/
+.workbuddy/
+.pytest_cache/
+.postman/
+.reports/
+docker-data/
+reports/
+api_test/
+ui-test/
+postman/
+newman/
+web/
+docker-compose.yml.local
+
+# CI workflow files (not needed for image build)
+.github/workflows/
+
+# Frontend build outputs (large)
+web/build/
+
+# Documentation / markdown (CI doesn't need)
+*.md
+README.md
+!ci-assets/*.md
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Logs
+*.log
+*.log.*
+
+# Session files
+omp-session-*.html
+
+# Keep these for build:
+# Dockerfile.ci
+# .github/scripts/pre-migrate-oidc.sql
+# ci-assets/bbs-go

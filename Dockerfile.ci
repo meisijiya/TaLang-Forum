@@ -1,0 +1,65 @@
+# Dockerfile.ci — #18 v3
+#
+# 派生镜像：在 mlogclub/bbs-go:latest（带 #01 OIDC schema bug 的上游官方镜像）
+# 基础上替换 /app/bbs-go 为本地预打好的 patched 二进制（issuer/subject varchar 512→255）
+# 目的：让 CI runner 用本地构建镜像跑 install wizard，绕开 GHCR/Docker Hub push 阻塞
+#
+# 设计依据（#01 evidence §十 10.2 + 10.3 + #18 v3 evidence §一）：
+#   - 上游 OIDCIdentity struct 在 internal/models/models.go 用 gorm:"size:512"，
+#     GORM AutoMigrate 生成 CREATE UNIQUE INDEX uk_oidc_issuer_subject (...) →
+#     (64+512+512)×4 = 4352 字节 > MySQL 3072 字节上限 → Error 1071
+#   - 本机 patch 法（#01 evidence §十 10.2）：改 issuer/subject size:512→255，
+#     go build 重打二进制为 59MB ELF，FROM latest COPY /app/bbs-go
+#   - 本 Dockerfile.ci 把这个 patch 流程固化到 Dockerfile，CI runner 自己 build
+#
+# 镜像构建后 tag = mlogclub/bbs-go:oidc255-fix
+#   - 与本机已落地的镜像同名（同 image digest 由 dockerfile 内容决定）
+#   - workflow: docker build -t mlogclub/bbs-go:oidc255-fix -f Dockerfile.ci .
+#   - docker compose up -d 用本地构建的镜像，无需 push 到任何 registry
+#
+# 关键 patch 来源：ci-assets/bbs-go（从本机 mlogclub/bbs-go:oidc255-fix 提取）
+#   - 提取命令：docker create --name extract mlogclub/bbs-go:oidc255-fix
+#              docker cp extract:/app/bbs-go ci-assets/bbs-go
+#              docker rm extract
+#   - 59MB, ELF 64-bit, 与本机运行 bbs-go 二进制一致
+#   - 注意：ci-assets/bbs-go 必须在 .dockerignore 之外（不能被排除）
+#
+# #18 v3 关键发现（v3 evidence §一）：仅 pre-migrate SQL 不够
+#   - GORM ALTER TABLE 强制 MODIFY COLUMN 到 struct 定义（varchar 255→512）
+#   - GORM CREATE INDEX 检查定义不只检查名字
+#   - 所以必须在 binary 层 patch OIDCIdentity struct（这才是 #01 §十 10.2 实证的修法）
+
+FROM mlogclub/bbs-go:latest AS base
+
+# ---- 阶段 1：不需要 builder，patched binary 已预打到 .scratch/ci-assets/ ----
+
+# ---- 阶段 2：组装最终镜像 ----
+FROM mlogclub/bbs-go:latest
+
+USER root
+
+# 安装 mysql-client + bash（Alpine 3.24.1 用 apk）
+RUN apk add --no-cache mysql-client bash
+
+# 用 patched 二进制替换上游的 broken bbs-go
+# 上游 OIDCIdentity struct size:512 → 本 binary size:255，绕开 4352B 索引限制
+# 不要 RUN bbs-go --version（会尝试连 DB 导致 build hang）
+COPY ci-assets/bbs-go /app/bbs-go
+RUN chmod +x /app/bbs-go && \
+    chown root:root /app/bbs-go && \
+    ls -la /app/bbs-go
+
+# 复制预迁移 SQL（兜底，万一 GORM 仍 ALTER 失败）
+COPY .github/scripts/pre-migrate-oidc.sql /app/pre-migrate-oidc.sql
+RUN chmod 644 /app/pre-migrate-oidc.sql
+
+# 不改 ENTRYPOINT / CMD — 继承原 bbs-go 镜像的 entrypoint.sh
+# entrypoint.sh 启动 ./bbs-go + node scripts/serve-ssr.mjs + trap 优雅终止
+
+# 元数据
+LABEL org.opencontainers.image.title="bbs-go-oidc255-fix-ci" \
+      org.opencontainers.image.description="bbs-go with patched OIDCIdentity struct (size:255) to bypass #01 3072-byte index bug" \
+      org.opencontainers.image.source="https://github.com/meisijiya/TaLang-Forum" \
+      org.opencontainers.image.licenses="MIT" \
+      bbs-go.workaround.issue="01" \
+      bbs-go.workaround.ticket="18-v3"

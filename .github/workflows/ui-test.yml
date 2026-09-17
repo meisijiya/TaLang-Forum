@@ -65,10 +65,43 @@ jobs:
           sudo ln -sf /opt/allure-2.27.0/bin/allure /usr/local/bin/allure
           allure --version
 
-      - name: Bring up bbs-go + MySQL stack
+      # #18 v3: build patched bbs-go image locally (no GHCR/Docker Hub push needed)
+      - name: Build patched bbs-go image via Dockerfile.ci
+        run: |
+          echo "Building patched bbs-go image (replaces /app/bbs-go with patched binary)..."
+          docker build -t mlogclub/bbs-go:oidc255-fix -f Dockerfile.ci .
+          docker images | grep oidc255-fix
+
+      # #18 v3: bring up MySQL first, then pre-migrate OIDC table (belt + suspenders for #01 bug)
+      - name: Start MySQL only
         run: |
           export BBSGO_IMAGE_TAG=oidc255-fix
-          docker compose up -d
+          docker compose up -d mysql
+          echo "Waiting for MySQL to be ready..."
+          for i in $(seq 1 60); do
+            if docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
+              echo "MySQL ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          if ! docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
+            echo "::error::MySQL not ready after 60s"
+            docker compose logs --tail=200 mysql
+            exit 1
+          fi
+
+      - name: Pre-migrate OIDC table (bypass #01 schema bug)
+        run: |
+          echo "Running pre-migrate SQL (DROP+CREATE t_o_id_c_identity with varchar(255))..."
+          docker exec -i bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password bbsgo < .github/scripts/pre-migrate-oidc.sql 2>&1 | grep -v "Using a password" || true
+          echo "Verify pre-migrated table:"
+          docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password bbsgo -e "SHOW CREATE TABLE t_o_id_c_identity\G" 2>&1 | grep -v "Using a password" | head -20
+
+      - name: Bring up bbs-go stack (patched image)
+        run: |
+          export BBSGO_IMAGE_TAG=oidc255-fix
+          docker compose up -d bbs-go
           echo "Waiting for bbs-go to be ready..."
           for i in $(seq 1 90); do
             if curl -sf http://127.0.0.1:8081/api/install/status > /dev/null 2>&1; then
