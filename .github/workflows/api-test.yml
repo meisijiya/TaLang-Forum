@@ -82,7 +82,8 @@ jobs:
           export BBSGO_IMAGE_TAG=oidc255-fix
           docker compose up -d mysql
           echo "Waiting for MySQL to be ready..."
-          for i in $(seq 1 60); do
+          # #18 v3 fix: extend timeout from 60s to 180s (CI runner pulls mysql:8.4 1.1GB on first run)
+          for i in $(seq 1 180); do
             if docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
               echo "MySQL ready after ${i}s"
               break
@@ -90,7 +91,7 @@ jobs:
             sleep 1
           done
           if ! docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
-            echo "::error::MySQL not ready after 60s"
+            echo "::error::MySQL not ready after 180s"
             docker compose logs --tail=200 mysql
             exit 1
           fi
