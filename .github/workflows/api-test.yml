@@ -146,6 +146,44 @@ jobs:
             done
           fi
 
+      # #51 fix: poll /api/install/status until data.installed=true to avoid HTTP 428 race
+      # against pytest login-01..07. Without this, fresh CI containers hit install wizard
+      # mid-flight and 7 login tests fail with assert 428 == 200. (#18b evidence §七 7.1)
+      - name: Wait for bbs-go install wizard (poll /api/install/status)
+        run: |
+          for i in $(seq 1 60); do
+            INSTALLED=$(curl -sf http://127.0.0.1:8081/api/install/status | python3 -c "import sys,json; print(json.load(sys.stdin).get('data', {}).get('installed', False))" 2>/dev/null || echo "False")
+            if [ "$INSTALLED" = "True" ]; then
+              echo "bbs-go install wizard completed after ${i} polls"
+              break
+            fi
+            echo "Waiting for install wizard... poll ${i}/60"
+            sleep 2
+          done
+          if [ "$INSTALLED" != "True" ]; then
+            echo "::error::install wizard not completed within 120s"
+            docker compose logs --tail=200 bbs-go
+            exit 1
+          fi
+
+      - name: Verify install status and warm up admin login
+        run: |
+          curl -sf http://127.0.0.1:8081/api/install/status | tee /tmp/install-status.json
+          grep -q '"installed":true' /tmp/install-status.json || (echo "::error::not installed"; exit 1)
+          # Warm up: do a login attempt to verify bbs-go fully ready (catches race where
+          # install wizard finished but DB not yet flushed). 428 = wizard not done;
+          # 200 = success; 1000 = captcha error (expected since bbs-go captcha 强制登录).
+          WARM=$(curl -sf -X POST http://127.0.0.1:8081/api/login/signin \
+            -H "Content-Type: application/json" \
+            -d '{"username":"admin","password":"Test@12345"}' \
+            -w "\n%{http_code}" || echo "000")
+          echo "Warmup login response: ${WARM}"
+          if echo "$WARM" | grep -q "428"; then
+            echo "::error::warmup login got 428 — install wizard still not ready"
+            docker compose logs --tail=200 bbs-go
+            exit 1
+          fi
+
       - name: Generate fresh admin + signout tokens via MySQL
         run: |
           MYSQL_CONTAINER=$(docker compose ps -q mysql)
