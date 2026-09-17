@@ -150,14 +150,27 @@ jobs:
           " 2>&1 | tail -10
 
       - name: Run pytest (ui tests)
-        # #18 v3 fix: no working-directory; use repo-relative paths
+        # #18b fix: cd ui-test 让 conftest.py 自动加载 base/common/base_api/page
+        # （不要用 --rootdir=ui-test，pytest 8+ 会让 rootdir 解析失败导致 ModuleNotFoundError）
         run: |
           mkdir -p ui-test/reports/allure-results
-          python -m pytest ui-test/testcase/ -v \
+          cd ui-test
+          python -m pytest testcase/ -v \
             --tb=short \
-            --rootdir=ui-test \
-            --alluredir=ui-test/reports/allure-results 2>&1 | tee ui-test/reports/ui-pytest-run.log || echo "(pytest exit non-zero, continue-on-error)"
+            --alluredir=reports/allure-results 2>&1 | tee reports/ui-pytest-run.log || echo "(pytest exit non-zero, continue-on-error)"
         continue-on-error: true
+
+      # #18b: 硬检查 — pytest 0 tests collected 时必须 fail，避免虚假 success
+      # (#50 backlog 落地)
+      - name: Validate pytest collected > 0 (ui)
+        if: always()
+        run: |
+          if grep -q "collected 0 items" ui-test/reports/ui-pytest-run.log; then
+            echo "::error::pytest collected 0 items — conftest.py / test files missing or import broken"
+            cat ui-test/reports/ui-pytest-run.log | tail -20
+            exit 1
+          fi
+          echo "pytest collected > 0 — OK"
 
       - name: Generate Allure HTML report (ui)
         if: always()

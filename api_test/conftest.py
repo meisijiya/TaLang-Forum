@@ -4,9 +4,19 @@ fixtures：
 - client: 普通 client，无 token
 - admin_client: 带 admin token 的 client（CI 用 env var 注入）
 - 不需要 freshest_token（本机 hard-coded 已足够）
+
+#18b 兜底：conftest.py 在 repo root 跑 pytest 也可加载 base_api/ common/
+（不用 cd api_test 也能工作，避免同事误改 workflow 加 --rootdir 导致 ImportError）
 """
 import os
 import subprocess
+import sys
+from pathlib import Path
+
+# #18b fix: 把 conftest.py 所在目录塞进 sys.path，让 base_api/ common/ 可被 import
+_CONFTEST_DIR = Path(__file__).resolve().parent
+if str(_CONFTEST_DIR) not in sys.path:
+    sys.path.insert(0, str(_CONFTEST_DIR))
 
 import allure
 import pytest

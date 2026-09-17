@@ -157,14 +157,27 @@ jobs:
           " 2>&1 | tail -10
 
       - name: Run pytest (api tests)
-        # #18 v3 fix: no working-directory; use absolute-style paths from repo root
+        # #18b fix: cd api_test 让 conftest.py 自动加载 base_api/common
+        # （不要用 --rootdir=api_test，pytest 8+ 会让 rootdir 解析失败导致 ModuleNotFoundError）
         run: |
           mkdir -p api_test/reports/allure-results
-          python -m pytest api_test/testcases/ -v \
+          cd api_test
+          python -m pytest testcases/ -v \
             --tb=short \
-            --rootdir=api_test \
-            --alluredir=api_test/reports/allure-results 2>&1 | tee api_test/reports/api-pytest-run.log || echo "(pytest exit non-zero, continue-on-error)"
+            --alluredir=reports/allure-results 2>&1 | tee reports/api-pytest-run.log || echo "(pytest exit non-zero, continue-on-error)"
         continue-on-error: true
+
+      # #18b: 硬检查 — pytest 0 tests collected 时必须 fail，避免虚假 success
+      # (#50 backlog 落地)
+      - name: Validate pytest collected > 0 (api)
+        if: always()
+        run: |
+          if grep -q "collected 0 items" api_test/reports/api-pytest-run.log; then
+            echo "::error::pytest collected 0 items — conftest.py / test files missing or import broken"
+            cat api_test/reports/api-pytest-run.log | tail -20
+            exit 1
+          fi
+          echo "pytest collected > 0 — OK"
 
       - name: Generate Allure HTML report (api)
         if: always()
