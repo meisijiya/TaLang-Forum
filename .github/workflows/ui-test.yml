@@ -76,16 +76,19 @@ jobs:
         run: |
           export BBSGO_IMAGE_TAG=oidc255-fix
           docker compose up -d mysql
+          # #18 v3 fix: dynamic container name (CI runner uses repo dir name 'talang-forum-mysql-1',
+          # local workstation uses 'bbs-go-mysql-1'). Use docker compose ps to get the real name.
+          MYSQL_CONTAINER=$(docker compose ps -q mysql)
+          echo "MySQL container: ${MYSQL_CONTAINER}"
           echo "Waiting for MySQL to be ready..."
-          # #18 v3 fix: extend timeout from 60s to 180s (CI runner pulls mysql:8.4 1.1GB on first run)
           for i in $(seq 1 180); do
-            if docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
+            if docker exec "${MYSQL_CONTAINER}" mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
               echo "MySQL ready after ${i}s"
               break
             fi
             sleep 1
           done
-          if ! docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
+          if ! docker exec "${MYSQL_CONTAINER}" mysql -uroot -pbbsgo_root_password -e "SELECT 1" >/dev/null 2>&1; then
             echo "::error::MySQL not ready after 180s"
             docker compose logs --tail=200 mysql
             exit 1
@@ -93,10 +96,11 @@ jobs:
 
       - name: Pre-migrate OIDC table (bypass #01 schema bug)
         run: |
+          MYSQL_CONTAINER=$(docker compose ps -q mysql)
           echo "Running pre-migrate SQL (DROP+CREATE t_o_id_c_identity with varchar(255))..."
-          docker exec -i bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password bbsgo < .github/scripts/pre-migrate-oidc.sql 2>&1 | grep -v "Using a password" || true
+          docker exec -i "${MYSQL_CONTAINER}" mysql -uroot -pbbsgo_root_password bbsgo < .github/scripts/pre-migrate-oidc.sql 2>&1 | grep -v "Using a password" || true
           echo "Verify pre-migrated table:"
-          docker exec bbs-go-mysql-1 mysql -uroot -pbbsgo_root_password bbsgo -e "SHOW CREATE TABLE t_o_id_c_identity\G" 2>&1 | grep -v "Using a password" | head -20
+          docker exec "${MYSQL_CONTAINER}" mysql -uroot -pbbsgo_root_password bbsgo -e "SHOW CREATE TABLE t_o_id_c_identity\G" 2>&1 | grep -v "Using a password" | head -20
 
       - name: Bring up bbs-go stack (patched image)
         run: |
@@ -137,7 +141,8 @@ jobs:
 
       - name: Generate fresh admin token via MySQL
         run: |
-          docker exec bbs-go-mysql-1 mysql -ubbsgo -pbbsgo_password bbsgo -e "
+          MYSQL_CONTAINER=$(docker compose ps -q mysql)
+          docker exec "${MYSQL_CONTAINER}" mysql -ubbsgo -pbbsgo_password bbsgo -e "
             INSERT INTO t_user_token (token, user_id, expired_at, status, create_time)
             VALUES ('$(python -c 'import secrets; print(secrets.token_hex(16))')', 1,
                     UNIX_TIMESTAMP()*1000 + 7*24*3600*1000, 0, UNIX_TIMESTAMP()*1000);
