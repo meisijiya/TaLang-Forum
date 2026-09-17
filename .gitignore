@@ -1,0 +1,67 @@
+# #46 execute: python/IDE/test cache ignore
+# Prevent __pycache__, .pytest_cache, .pyc, etc. from being committed
+
+# Python bytecode / cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# pytest
+.pytest_cache/
+.pytest_cache
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Virtual envs
+.venv/
+venv/
+env/
+.python-version
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.log.*
+
+# Local secrets (kept per AGENTS.md §4.4 fork 私有化 .env* 豁免)
+.env
+.env.*
+!.env.example
+
+# Docker local override (private compose file)
+docker-compose.yml.local
+
+# Docker data volumes
+docker-data/
+
+# Session/UI test capture files
+omp-session-*.html
+
+# Postman local app state
+.postman/
+
+# Scratch / workbuddy (harness working dirs)
+.scratch/
+.workbuddy/
+
+# Frontend build artifacts
+web/node_modules/
+web/build/
+web/.react-router/
+web/tsconfig.tsbuildinfo
+
+# Misc
+*.tmp
+*.bak
+*.orig

@@ -1,0 +1,1 @@
+{'type': 'topic', 'categoryId': 1, 'title': '#13 pytest 自动化测试首帖 1789573011', 'content': 'pytest + base_api + Allure 第一条发帖脚本验证', 'contentType': 'html', 'captchaId': 'bypass_attempt', 'captchaCode': 'bypass_attempt'}
