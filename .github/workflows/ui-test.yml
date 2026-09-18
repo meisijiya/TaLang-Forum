@@ -227,13 +227,15 @@ jobs:
       - name: Run pytest (ui tests)
         # #18b fix: cd ui-test 让 conftest.py 自动加载 base/common/base_api/page
         # （不要用 --rootdir=ui-test，pytest 8+ 会让 rootdir 解析失败导致 ModuleNotFoundError）
+        # #52 fix: 移除 continue-on-error: true — pytest 真失败必须 fail workflow，不能 swallow
+        # （#53 已 export BBS_GO_ADMIN_TOKEN 到 GITHUB_ENV，admin token 链路通畅，
+        #  本机实证 0 skip，pytest 失败应当 propagate 而非被吞）
         run: |
           mkdir -p ui-test/reports/allure-results
           cd ui-test
           python -m pytest testcase/ -v \
             --tb=short \
-            --alluredir=reports/allure-results 2>&1 | tee reports/ui-pytest-run.log || echo "(pytest exit non-zero, continue-on-error)"
-        continue-on-error: true
+            --alluredir=reports/allure-results 2>&1 | tee reports/ui-pytest-run.log
 
       # #18b: 硬检查 — pytest 0 tests collected 时必须 fail，避免虚假 success
       # (#50 backlog 落地)
