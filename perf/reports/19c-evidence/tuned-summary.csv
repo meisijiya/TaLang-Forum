@@ -1,0 +1,5 @@
+users,baseline_req,tuned_req,baseline_med_ms,tuned_med_ms,baseline_p95_ms,tuned_p95_ms,baseline_p99_ms,tuned_p99_ms,baseline_rps,tuned_rps,baseline_fail_pct,tuned_fail_pct,p99_delta_ms,p99_impr_x
+50,2866,2853,30,29,48,76,63,450,24.17,24.00,0.00,0.00,+387,0.14x_worse
+100,5738,5739,34,30,77,68,120,150,48.47,48.32,0.00,0.00,+30,0.80x_worse
+200,11092,11080,57,39,330,190,720,920,93.14,93.39,0.00,0.00,+200,0.78x_worse
+500,16196,17775,610,590,5100,1500,6300,2300,135.74,148.86,0.00,0.00,-4000,2.74x_better
