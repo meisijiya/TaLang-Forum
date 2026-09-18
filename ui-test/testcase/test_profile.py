@@ -19,21 +19,38 @@ def test_profile_change_nickname(admin_page, admin_client):
     """场景 2：改昵称（form + API fallback）
 
     步骤：
-    1. admin_page 打开个人设置
-    2. 验证昵称输入框可见
+    1. 拿到当前 nickname（避免重复改 — bbs-go POST /api/user/update/{id} 对重复值返回 success=false）
+    2. 生成唯一新 nickname（时间戳后缀）
     3. API fallback 验证改昵称能力
+    4. try/finally 改回原 nickname（避免污染其他测试如 test_profile_view）
+
+    #55 修复要点：
+    - admin user ID = 1（不是 8EqSDhrQDK4，brief 硬事实已更正）
+    - bbs-go 真实路径 = POST /api/user/update/{id}（不是 PUT，PUT 路由不存在）
+    - nickname column = varchar(16)，新昵称 ≤16 字符
     """
+    import time
     from page.user_home_page import UserHomePage
     up = UserHomePage(admin_page)
     up.open_settings()
     admin_page.wait_for_load_state("networkidle", timeout=10000)
 
-    # API fallback 验证改昵称能力（合法长度 2-12）
-    resp = admin_client.post("/api/user/update/8EqSDhrQDK4", json_data={
-        "nickname": "admin",
-    })
-    assert resp.status_code == 200
-    # success=true 或 message 含长度限制都是 valid（取决于 current nickname）
-    body = resp.json()
-    assert body.get("success") is True or "昵称长度" in body.get("message", ""), \
-        f"改昵称失败: {body}"
+    # 1. 当前 nickname = admin（install wizard 默认）
+    original_nickname = "admin"
+    # 2. 唯一新 nickname（时间戳后缀，≤16 字符：adm_xxxxx = 9 字符）
+    new_nickname = f"adm_{int(time.time()) % 100000}"
+
+    # 3. API 改成新 nickname（admin user id = 1）
+    try:
+        resp = admin_client.post("/api/user/update/1", json_data={
+            "nickname": new_nickname,
+        })
+        assert resp.status_code == 200, f"POST 返回 {resp.status_code}"
+        body = resp.json()
+        assert body.get("success") is True, \
+            f"改昵称失败: {body}"
+    finally:
+        # 4. try/finally 兜底：改回原 nickname（避免污染其他测试）
+        admin_client.post("/api/user/update/1", json_data={
+            "nickname": original_nickname,
+        })
